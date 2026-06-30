@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestor de Tareas</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    header { display: flex; justify-content: space-between; align-items: baseline; }
+    h1 { font-size: 1.4rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+    .estado { font-weight: 600; }
+    select { padding: 6px; font-size: 0.95rem; }
+    a { color: #2980b9; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gestor de Tareas</h1>
+    <a href="{{ url_for('logout') }}">Salir</a>
+  </header>
+
+  <table data-testid="task-table">
+    <thead>
+      <tr><th>ID</th><th>Tarea</th><th>Estado</th><th>Cambiar a</th></tr>
+    </thead>
+    <tbody>
+      {% for t in tasks %}
+      <tr data-testid="task-row" data-task-id="{{ t.id }}">
+        <td>{{ t.id }}</td>
+        <td>{{ t.titulo }}</td>
+        <td class="estado" data-testid="task-estado">{{ t.estado }}</td>
+        <td>
+          <select data-testid="task-select" onchange="cambiarEstado({{ t.id }}, this.value)">
+            {% for e in estados %}
+            <option value="{{ e }}" {% if e == t.estado %}selected{% endif %}>{{ e }}</option>
+            {% endfor %}
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <script>
+    // TASK-142 — BUG DELIBERADO:
+    // La llamada PATCH funciona y devuelve 200, pero NO se actualiza el DOM.
+    // El nuevo estado solo se ve al recargar la página. Esa es la falla que QA debe detectar.
+    async function cambiarEstado(id, estado) {
+      const resp = await fetch(`/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado })
+      });
+      // 👇 El bug: el backend respondió OK, pero no refrescamos la celda de estado.
+      // La fila sigue mostrando el estado viejo hasta que el usuario recarga.
+      if (resp.ok) {
+        console.log("Estado actualizado en el backend, pero la UI no se refresca (TASK-142).");
+      }
+    }
+  </script>
+</body>
+</html>

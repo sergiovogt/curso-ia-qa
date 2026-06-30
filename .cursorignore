@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+app/tasks.db
+app/venv/
+venv/
+.venv/
+
+# Node / Playwright
+node_modules/
+playwright/node_modules/
+playwright/playwright-report/
+playwright/test-results/
+.cache/
+
+# Testsprite generated artifacts
+testsprite_tests/
